@@ -1,16 +1,15 @@
 #include <iostream>
 #include <vector>
 #include <bitset>
+#include <iomanip>
 
 std::bitset<64> init_perm(std::bitset<64>& plain_64);
 
 int main() {
-    std::bitset<64> plain_t64(0b000000010010001101000101011001111000100110101011110011011110111);
-
-    std::bitset<64> ans = init_perm(plain_t64);
-
-    std::cout << plain_t64 << std::endl;
-    std::cout << ans;
+    //plain text
+    std::bitset<64> plain_t64(0b0000000100100011010001010110011110001001101010111100110111101111);
+    
+    
 
     return 0;
 }
@@ -22,7 +21,7 @@ int main() {
 */
 std::bitset<64> init_perm(std::bitset<64>& plain_t64) {
     
-    std::vector<int8_t> IP_table = {
+    std::vector<unsigned short int> IP_table = {
         58,	50,	42,	34,	26,	18,	10,	2,
         60,	52,	44,	36,	28,	20,	12,	4,
         62,	54,	46,	38,	30,	22,	14,	6,
@@ -33,12 +32,15 @@ std::bitset<64> init_perm(std::bitset<64>& plain_t64) {
         63,	55,	47,	39,	31,	23,	15,	7
     };
 
-    std::bitset<64> new_plain_t64 = plain_t64;
-    
-    for (int8_t i = 0; i < 64; i++) {
-        int8_t IP_bit = IP_table[i];
-        new_plain_t64[i] = plain_t64[IP_bit-1];
+    std::bitset<64> new_plain_t64;
+
+    std::cout << "Transformation: " << std::endl;
+    for(unsigned short int bit = 0; bit < IP_table.size(); bit++) {
+        unsigned short int IP_bit = IP_table[bit]-1;
+        std::cout << bit+1 << "/" << plain_t64[bit] << "-->" << IP_bit+1 << "/" << new_plain_t64[IP_bit] << std::endl;
+        new_plain_t64[bit] = plain_t64[IP_bit];
     }
 
+    std::cout << plain_t64 << "---->" << new_plain_t64 << std::endl;
     return new_plain_t64;   
 }
