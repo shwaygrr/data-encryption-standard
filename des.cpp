@@ -8,7 +8,7 @@
 
 #include "des_tables.h"
 
-std::vector<std::bitset<48>> subKeys48(const std::bitset<56>& key_perm56);
+std::vector<std::bitset<48>> genSubkeys48(const std::bitset<56>& key_perm56);
 std::bitset<64> ciperGen64 (std::bitset<64> key64, std::bitset<64> plain_t64);
 std::bitset<32> f32(std::bitset<32> right32, std::bitset<48> subkey48);
 
@@ -118,12 +118,12 @@ void leftRotate(std::bitset<28>& bin28, unsigned int num_rots) {
         Input: Permutation table of size return_T and binary of size input_T
         Output: Permutated binary of size return_T
 */
-template <typename input_T, typename return_T>
-return_T permute(const std::vector<unsigned short int>& table, const input_T& input) {
+template <size_t input_T, size_t return_T>
+std::bitset<return_T> permute(const std::vector<unsigned short int>& table, const std::bitset<input_T>& input) {
     //reverse table
     std::vector<unsigned short int> rev_table = revTable(table);
     
-    return_T permutation;
+    std::bitset<return_T> permutation;
     
     // std::cout << "Transformation: " << std::endl;
     for(int bit = 0; bit < table.size(); bit++) {
@@ -141,7 +141,7 @@ return_T permute(const std::vector<unsigned short int>& table, const input_T& in
         -   Input: 56-bit Key permutation
         -   Output: 16 48-bit subkeys
 */
-std::vector<std::bitset<48>> subKeys48(const std::bitset<56>& key_perm56) {
+std::vector<std::bitset<48>> genSubkeys48(const std::bitset<56>& key_perm56) {
     
     //split key perm
     std::string str_key_perm56 = key_perm56.to_string();
@@ -172,7 +172,7 @@ std::vector<std::bitset<48>> subKeys48(const std::bitset<56>& key_perm56) {
 
     //Permutation using PC_2 for each 56-bit subkey
     for (std::bitset<56>& subkey56 : subkeys56) {
-        std::bitset<48> new_subkey48 = permute<std::bitset<56>, std::bitset<48>>(PC_2, subkey56);
+        std::bitset<48> new_subkey48 = permute<56, 48>(PC_2, subkey56);
         subkeys_perm48.push_back(new_subkey48);
     }
 
@@ -187,8 +187,7 @@ std::vector<std::bitset<48>> subKeys48(const std::bitset<56>& key_perm56) {
 */
 std::bitset<32> f32(std::bitset<32> right32, std::bitset<48> subkey48) {
     //Get permutation of right with E_bit table
-    std::bitset<48> new_right48 = permute<std::bitset<32>, std::bitset<48>>(E_bit, right32);
-
+    std::bitset<48> new_right48 = permute<32, 48>(E_bit, right32);
 
     //XOR key and right
     new_right48 = new_right48 ^= subkey48;
@@ -218,7 +217,7 @@ std::bitset<32> f32(std::bitset<32> right32, std::bitset<48> subkey48) {
     std::bitset<32> new_right32(str_new_right32);
     
     //Permutation using P_table
-    new_right32 = permute<std::bitset<32>, std::bitset<32>>(P_table, new_right32);
+    new_right32 = permute<32, 32>(P_table, new_right32);
 
     return new_right32;
 }
@@ -230,11 +229,11 @@ std::bitset<32> f32(std::bitset<32> right32, std::bitset<48> subkey48) {
 */
 std::bitset<64> ciperGen64 (std::bitset<64> key64, std::bitset<64> plain_t64) {
     //generate 16 keys
-    std::bitset<56> key_perm56 = permute<std::bitset<64>, std::bitset<56>>(PC_1, key64);
-    std::vector<std::bitset<48>> subkeys48 = subKeys48(key_perm56);
+    std::bitset<56> key_perm56 = permute<64, 56>(PC_1, key64);
+    std::vector<std::bitset<48>> subkeys48 = genSubkeys48(key_perm56);
 
     //plain text permutation
-    std::bitset<64> plain_t_perm64 = permute<std::bitset<64>, std::bitset<64>>(IP_table, plain_t64);
+    std::bitset<64> plain_t_perm64 = permute<64, 64>(IP_table, plain_t64);
 
 
     //split plain text
@@ -253,7 +252,7 @@ std::bitset<64> ciperGen64 (std::bitset<64> key64, std::bitset<64> plain_t64) {
     std::bitset<64> post_rounds64(right32.to_string()+left32.to_string());
     // std::cout <<  post_rounds64;
 
-    std::bitset<64> cipher_t64 = permute<std::bitset<64>, std::bitset<64>>(IP_1_inv, post_rounds64);
+    std::bitset<64> cipher_t64 = permute<64, 64>(IP_1_inv, post_rounds64);
     std::cout << cipher_t64;
 
     return cipher_t64;
