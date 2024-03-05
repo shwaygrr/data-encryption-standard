@@ -360,9 +360,27 @@ std::bitset<64> ciperGen64 (std::bitset<64> key64, std::bitset<64> plain_t64) {
     }
 
     std::bitset<64> post_rounds64(right32.to_string()+left32.to_string());
-    std::cout <<  post_rounds64;
+    // std::cout <<  post_rounds64;
 
-    
-    // std::cout << left32 << std::endl << right32;
-    return key64;
+    //final permutation
+    std::vector<unsigned short int> IP_1_inv {
+        40, 8, 48, 16, 56, 24, 64, 32,
+        39, 7, 47, 15, 55, 23, 63, 31,
+        38, 6, 46, 14, 54, 22, 62, 30,
+        37, 5, 45, 13, 53, 21, 61, 29,
+        36, 4, 44, 12, 52, 20, 60, 28,
+        35, 3, 43, 11, 51, 19, 59, 27,
+        34, 2, 42, 10, 50, 18, 58, 26,
+        33, 1, 41, 9, 49, 17, 57, 25
+    };
+
+    IP_1_inv = revTable(IP_1_inv);
+
+    std::bitset<64> cipher_t64;
+    for(int bit = 0; bit < IP_1_inv.size(); bit++) {
+        unsigned short int IP_1_inv_bit = 64-IP_1_inv[bit];
+        cipher_t64[bit] = post_rounds64[IP_1_inv_bit];
+    }
+    std::cout << cipher_t64;
+    return cipher_t64;
 }
