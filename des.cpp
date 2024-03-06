@@ -154,7 +154,7 @@ std::bitset<64> cipherGen64 (std::bitset<64> key64, std::bitset<64> plain_t64) {
     // std::cout <<  post_rounds64;
 
     std::bitset<64> cipher_t64 = permute<64, 64>(IP_1_inv, post_rounds64);
-    std::cout << cipher_t64;
+    // std::cout << cipher_t64 << stdLL::endl;
 
     return cipher_t64;
 }

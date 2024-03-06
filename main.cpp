@@ -1,37 +1,32 @@
 #include <sstream>
 #include <iomanip>
-
+#include <cstdint>
 #include "des.h"
 
-unsigned int stringToHexPadded(const std::string& message);
+std::string stringToHexPadded(const std::string& message);
+uint64_t hexToDec(const std::string& hex64);
+std::string binToHex(const std::bitset<64>& cipher_t64);
+std::string ECB(const std::string& key, const std::string& plain_t);
 
 int main() {
-{
-    //ask for input, plain_t and 
-    // std::string message;
-
-    // std::cout << "Please Enter your message: ";
-    // std::getline (std::cin, message);
+    // ask for key
+    std::string key; //0E329232EA6D0D73
     
-    // turn to hex, pad, turn to binary
-    // unsigned int bin = stringToHexPadded(message);
-    // const unsigned int num_bits = static_cast<int>(ceil(log(bin)))+1;
-    // std::bitset<num_bits> plaint_t64(bin);
+    do {
+        std::cout << "Enter the key **16-hexadigit hex**: "; 
+        std::cin >> key;
+    } while (key.length() != 16);
     
-    // std::cout << message;
-
-    // // start encryption 64 bits at a time
-    // std::cout << plain64;
-
-}
+    std::cin.ignore(); //so getline does not read whiitespace after cin
     
-    std::bitset<64> plain_t64(0b0000000100100011010001010110011110001001101010111100110111101111);
-    std::bitset<64> key64(0b0001001100110100010101110111100110011011101111001101111111110001);
+    //ask for message
+    std::string message;  //Your lips are smoother than vaseline
+    std::cout << "Enter your message: ";
+    std::getline(std::cin, message);
     
-    // std::bitset<64> plain_t64(0X1122334455667788);
-    // std::bitset<64> key64(0x752878397493CB70);
-
-    cipherGen64(key64, plain_t64);
+    // mode of operation
+    std::string cipher_text_hex = ECB(key, message);
+    std::cout << "Cipher Text (in Hex): " << cipher_text_hex << std::endl;
     return 0;
 }
 
@@ -42,7 +37,7 @@ int main() {
         -   Output: Integer Representation of String Hex
         https://www.techieclues.com/blogs/convert-string-to-hexadecimal-in-cpp
 */
-unsigned int stringToHexPadded(const std::string& message) {
+std::string stringToHexPadded(const std::string& message) {
     std::string hex_result = "";
     for (char c : message) {
         int ascii = static_cast<int>(c);
@@ -58,12 +53,78 @@ unsigned int stringToHexPadded(const std::string& message) {
         hex_result +="0";
     }
 
-    std::cout << hex_result << std::endl;
+    return hex_result;
+}
 
-    std::stringstream ss;
-    ss << std::hex << hex_result;
-    unsigned int dec_result;
-    ss >> dec_result;
+/*
+    Hexadecimal to decimal
+        - Input: 16-hexadigit Hexadecimal string
+        - Output: Decimal (64-bits)
+        https://stackoverflow.com/questions/11031159/c-converting-hexadecimal-to-decimal
+*/
+uint64_t hexToDec(const std::string& hex64) {
+    //create an input string stream with the hexadecimal string
+    std::istringstream iss(hex64);
 
-    return dec_result;
+    uint64_t decimal;
+
+    //read the hexadecimal string as a hexadecimal integer
+    iss >> std::hex >> decimal;
+
+    return decimal;
+}
+
+/*
+    Binary to Hexadecimal
+        - Input: 64-bit binary
+        - Output: 16-hexadigit bit
+*/
+std::string binToHex(const std::bitset<64>& cipher_t64) {
+    //convert the std::bitset to an integer
+    unsigned long long int_value = cipher_t64.to_ullong();
+
+    //create a string stream to hold the hexadecimal representation
+    std::stringstream res;
+
+    //write the integer value as hexadecimal to the stringstream
+    res << std::hex << std::uppercase << int_value;
+    
+    //pad front
+    std::string hex_string16 = res.str();
+    while (hex_string16.length() != 16) {
+        hex_string16 = "0" + hex_string16; 
+    }
+    
+    return hex_string16;
+}
+
+
+/*
+    Electronic Code Block Mode of Operation
+        - Input: Plain text
+        - Output: Cipher text
+*/
+std::string ECB(const std::string& key, const std::string& plain_t) {
+    //turn key to binary
+    std::bitset<64> key64(hexToDec(key));
+    
+    // turn to hex and pad
+    std::string message_hex = stringToHexPadded(plain_t);
+    
+    // start encryption 64 bits at a time
+    std::string cipher_text = "";
+
+    for(int i = 0; i < message_hex.length()/16; i++) {
+        //get 16-hexadecimal block
+        std::string plaint_t_hex16 = message_hex.substr(i*16, 16);
+
+        //turn into 64-bit block
+        std::bitset<64> plain_t_bin64(hexToDec(plaint_t_hex16));
+
+        //encrypt
+        std::string cipher_t_block64 = binToHex(cipherGen64(key64, plain_t_bin64));
+        cipher_text += (cipher_t_block64 + " ");
+    }
+
+    return cipher_text;
 }
