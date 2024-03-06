@@ -17,4 +17,5 @@ extern const std::vector<std::vector<std::vector<int>>> S_BOXES;
 extern const std::vector<unsigned short int> E_bit;
 
 extern const std::vector<unsigned short int> PC_2;
-#endif // DES_TABLES_H
+
+#endif

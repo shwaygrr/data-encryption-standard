@@ -1,85 +1,8 @@
-#include <iostream>
-#include <vector>
-#include <bitset>
-#include <string>
-#include <iomanip>
-#include <sstream>
-#include <math.h>
-
 #include "des_tables.h"
+#include "des.h"
 
-std::vector<std::bitset<48>> genSubkeys48(const std::bitset<56>& key_perm56);
-std::bitset<64> ciperGen64 (std::bitset<64> key64, std::bitset<64> plain_t64);
-std::bitset<32> f32(std::bitset<32> right32, std::bitset<48> subkey48);
 
 //helper functions
-std::vector<unsigned short int> revTable(const std::vector<unsigned short int>& table);
-void leftRotate(std::bitset<28>& bin28, unsigned int num_rots);
-unsigned int stringToHexPadded(const std::string& message);
-
-int main() {
-
-    //ask for input, plain_t and 
-    // std::string message;
-
-    // std::cout << "Please Enter your message: ";
-    // std::getline (std::cin, message);
-    
-    // turn to hex, pad, turn to binary
-    // unsigned int bin = stringToHexPadded(message);
-    // const unsigned int num_bits = static_cast<int>(ceil(log(bin)))+1;
-    // std::bitset<num_bits> plaint_t64(bin);
-    
-    // std::cout << message;
-
-    // // start encryption 64 bits at a time
-    // std::cout << plain64;
-
-
-    
-    std::bitset<64> plain_t64(0b0000000100100011010001010110011110001001101010111100110111101111);
-    // //key
-    std::bitset<64> key64(0b0001001100110100010101110111100110011011101111001101111111110001);
-    
-    // std::bitset<64> plain_t64(0X1122334455667788);
-    // std::bitset<64> key64(0x752878397493CB70);
-
-    ciperGen64(key64, plain_t64);
-    return 0;
-}
-/********************************************************************HELPER FUNCTIONS**********************************************************************/
-/*
-    String to Hex
-        -   Input: String
-        -   Output: Integer Representation of String Hex
-        https://www.techieclues.com/blogs/convert-string-to-hexadecimal-in-cpp
-*/
-unsigned int stringToHexPadded(const std::string& message) {
-    std::string hex_result = "";
-    for (char c : message) {
-        int ascii = static_cast<int>(c);
-        std::stringstream ss;
-        ss << std::hex << std::uppercase << ascii;
-        hex_result += ss.str();
-    }
-    // Add "0D0A" for Carriage Return and Line Feed
-    hex_result += "0D0A";
-
-    //pad
-    while(hex_result.length() % 16 != 0) {
-        hex_result +="0";
-    }
-
-    std::cout << hex_result << std::endl;
-
-    std::stringstream ss;
-    ss << std::hex << hex_result;
-    unsigned int dec_result;
-    ss >> dec_result;
-
-    return dec_result;
-}
-
 /*
     Reverse Vector (helper function)
         -   Input vector
@@ -109,31 +32,8 @@ void leftRotate(std::bitset<28>& bin28, unsigned int num_rots) {
     */
     bin28 = ( bin28 << num_rots)|(bin28 >> (28 - num_rots));
 }
-/*********************************************************************************************************************************************************/
 
 
-
-/*
-    Permute
-        Input: Permutation table of size return_T and binary of size input_T
-        Output: Permutated binary of size return_T
-*/
-template <size_t input_T, size_t return_T>
-std::bitset<return_T> permute(const std::vector<unsigned short int>& table, const std::bitset<input_T>& input) {
-    //reverse table
-    std::vector<unsigned short int> rev_table = revTable(table);
-    
-    std::bitset<return_T> permutation;
-    
-    // std::cout << "Transformation: " << std::endl;
-    for(int bit = 0; bit < table.size(); bit++) {
-        unsigned short int table_bit = input.size()-rev_table[bit]; //PC_1_bit from left since bitset goes from right to left (bit 7-right = bit 57-left)
-        permutation[bit] = input[table_bit];
-    }
-
-    // std::cout << key64 << "---->" << new_key56 << std::endl;
-    return permutation;
-}
 
 
 /*
@@ -222,12 +122,13 @@ std::bitset<32> f32(std::bitset<32> right32, std::bitset<48> subkey48) {
     return new_right32;
 }
 
+
 /*
     16 rounds of Encryption
         -   Input: 64-bit key and 64-bit plain text
         -   Output: 64-bit cipher text
 */
-std::bitset<64> ciperGen64 (std::bitset<64> key64, std::bitset<64> plain_t64) {
+std::bitset<64> cipherGen64 (std::bitset<64> key64, std::bitset<64> plain_t64) {
     //generate 16 keys
     std::bitset<56> key_perm56 = permute<64, 56>(PC_1, key64);
     std::vector<std::bitset<48>> subkeys48 = genSubkeys48(key_perm56);
